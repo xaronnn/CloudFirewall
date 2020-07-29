@@ -8,15 +8,34 @@ class CloudFirewall {
     private $key;
     private $curl;
 
+    /**
+     * CloudFirewall constructor
+     *
+     * @param string $email The your Cloudflare email address.
+     * @param string $key The your Cloudflare API key.
+     */
     public function __construct($email, $key) {
         $this->email = $email;
         $this->key = $key;
     }
 
-    public function changeSecurityLevel($zone, $value = 'low') {
+    /**
+     * Changes security level on your zone.
+     *
+     * @param string $value The security levels [low, medium, high, under_attack].
+     * @param string $zone The zone id.
+     * @return bool True if request is handled.
+     */
+    public function changeSecurityLevel($value = 'low', $zone) {
         return (!$this->checkSecurityLevel($value)) || (empty($zone)) ? false : $this->connect('https://api.cloudflare.com/client/v4/zones/'.$zone.'/settings/security_level', 'PATCH', array('value' => $value));
     }
 
+    /**
+     * Block an IP address on your zone.
+     *
+     * @param string $value The IP address.
+     * @return bool True if request is handled.
+     */
     public function blockIPv4($value) {
         return (!$this->checkIPv4($value)) ? false : $this->connect('https://api.cloudflare.com/client/v4/user/firewall/access_rules/rules', 'POST', array('mode' => 'block', 'configuration' => array('target' => 'ip', 'value' => $value), 'notes' => 'End in '.date('d.m.Y H:i:s a', time()+300)));
     }
