@@ -12,7 +12,7 @@ Protect your website against bots/spam/flood as using Cloudflare service.
 
 # Installation
 
-`composer require xaron/cloudfirewall`
+`composer require xaron/cloud-firewall`
 
 # Examples
 
