@@ -1,5 +1,5 @@
 {
-       "name": "XAR0N/CloudFirewall",
+       "name": "xar0n/cloud-firewall",
        "type": "library",
        "description": "Protect your website against bots/spam/flood as using Cloudflare service.",
        "keywords": ["cloudflare","ddos", "block","firewall"],
