@@ -106,7 +106,6 @@ class CloudFirewall {
                 echo json_encode(array('error' => true, 'message' => 'SQL injection detected, request is terminated and request IP address has banned from Cloudflare.', 'data' => array('word' => $badWord, 'request_method' => $method)));
                 $this->createAccessRule($this->getIP(), 'block');
                 die();
-                return;
             }
 		}
     }
@@ -124,7 +123,7 @@ class CloudFirewall {
 	}
 
     protected function getVulnTypeData($type) {
-        if($type) {
+        if($type && in_array($type, array('SQL', 'XSS'))) {
             switch($type) {
                 case 'SQL':
                     return array(
@@ -183,9 +182,6 @@ class CloudFirewall {
                         'svg onload'
                     );
                 break;
-
-                default:
-                    return false;
             }
         } else {
             return false;
@@ -206,7 +202,6 @@ class CloudFirewall {
         curl_setopt($this->curl, CURLOPT_POSTFIELDS, json_encode($fields));
         curl_setopt($this->curl, CURLOPT_HTTPHEADER, array('X-Auth-Email: '.$this->email, 'X-Auth-Key: '.$this->key, 'Content-Type: application/json'));
         return curl_exec($this->curl);
-        curl_close($this->curl);
     }
 
     protected function checkSecurityLevel($value) {
