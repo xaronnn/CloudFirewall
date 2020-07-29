@@ -1,16 +1,21 @@
 {
-       "name": "xaron/cloud-firewall",
-       "type": "library",
-       "description": "Protect your website against bots/spam/flood as using Cloudflare service.",
-       "keywords": ["cloudflare","ddos", "block","firewall"],
-       "homepage": "https://xaron.us",
-       "license": "MIT",
-       "authors": [
-           {
-               "name": "Uğur PEKESEN",
-               "email": "me@xaron.us",
-               "homepage": "http://xaron.us",
-               "role": "Developer"
-           }
-       ]
-   }
+    "name": "xaron/cloud-firewall",
+    "type": "library",
+    "description": "Protect your website against bots/spam/flood as using Cloudflare service.",
+    "keywords": ["cloudflare","ddos", "block","firewall"],
+    "homepage": "https://xaron.us",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Uğur PEKESEN",
+            "email": "me@xaron.us",
+            "homepage": "http://xaron.us",
+            "role": "Developer"
+        }
+    ],
+    "autoload": {
+        "psr-4": {
+            "CF\\": "src"
+        }
+    }
+}

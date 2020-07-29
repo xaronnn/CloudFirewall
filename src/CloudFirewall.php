@@ -1,5 +1,7 @@
 <?php if(!defined('BASEPATH')) exit('Direct access not allowed');
 
+namespace CF;
+
 class CloudFirewall {
 
     private $email;
