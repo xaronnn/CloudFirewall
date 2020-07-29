@@ -18,17 +18,17 @@ use CF\CloudFirewall;
 /*
 Init CloudFirewall class.
 */
-$firewall = new CloudFirewall('xaron@gmail.com', 'xaron12345', 'zone_id_optional');
-
+$firewall = new CloudFirewall('email_address', 'global_api_key', 'zone_id (Not required if already set in function parameter)');
 
 /*
 Change security level.
+Actions: [essentially_off, low, medium, high, under_attack]
 */
-$firewall->changeSecurityLevel('zone id', 'medium');
-
+$firewall->changeSecurityLevel('medium', 'zone_id (Not required if already set in constructor)');
 
 /*
-Ban IP address.
+Create access rule.
+Actions: [block, challenge, whitelist, js_challenge]
 */
-$firewall->blockIPv4('31.13.37.31');
+$firewall->createAccessRule('185.185.185.185', 'challenge');
 ```
