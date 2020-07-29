@@ -30,7 +30,7 @@ class CloudFirewall {
      * @return mixed Bool False if request is not responded. JSON if request success.
      */
     public function changeSecurityLevel($value = 'low', $zone = null) {
-        if($this->checkSecurityLevel($vlaue)) {
+        if($this->checkSecurityLevel($value)) {
             if($zone) {
                 return $this->connect('https://api.cloudflare.com/client/v4/zones/'.$zone.'/settings/security_level', 'PATCH', array('value' => $value));
             } else {
@@ -51,6 +51,132 @@ class CloudFirewall {
     public function createAccessRule($value, $action) {
         if($this->checkIP($value) && $this->checkAccessRule($action)) {
             return $this->connect('https://api.cloudflare.com/client/v4/user/firewall/access_rules/rules', 'POST', array('mode' => $action, 'configuration' => array('target' => ($this->checkIPv4($value) ? 'ip' : ($this->checkIPv4($value) ? 'ip6' : null)), 'value' => $value), 'notes' => 'Created by CloudFirewall'));
+        } else {
+            return false;
+        }
+    }
+
+
+    private function sqlCheck($value, $method, $displayName) {
+		$replace = array("can't" => "cant", "don't" => "dont");
+		foreach ($replace as $key => $value_rep) {
+			$value = str_replace($key, $value_rep, $value);
+		}
+		$badWords = $this->getArray('SQL');
+		foreach ($badWords as $badWord) {
+			if (strpos(strtolower($value), strtolower($badWord)) !== false) {
+                return json_encode(array('error' => true, 'message' => 'SQL injection detected, request is terminated.', 'data' => array('words' => $badWord, 'method' => $method, 'value' => $value)));
+			}
+		}
+    }
+
+    public function sqlInjectionBlock() {
+        foreach ($_GET as $key => $value) {
+			if (is_array($value)) {
+				$flattened = $this->arrayFlatten($value);
+				foreach ($flattened as $sub_key => $sub_value) {
+					$this->sqlCheck($sub_value, "_GET", $sub_key);
+				}
+			} else {
+				$this->sqlCheck($value, "_GET", $key);
+			}
+        }
+        foreach ($_POST as $key => $value) {
+			if (is_array($value)) {
+				$flattened = $this->arrayFlatten($value);
+				foreach ($flattened as $sub_key => $sub_value) {
+					$this->sqlCheck($sub_value, "_POST", $sub_key);
+				}
+			} else {
+				$this->sqlCheck($value, "_POST", $key);
+			}
+        }
+        foreach ($_COOKIE as $key => $value) {
+			if (is_array($value)) {
+				$flattened = $this->arrayFlatten($value);
+				foreach ($flattened as $sub_key => $sub_value) {
+					$this->sqlCheck($sub_value, "_COOKIE", $sub_key);
+				}
+			} else {
+				$this->sqlCheck($value, "_COOKIE", $key);
+			}
+		}
+    }
+    
+
+
+    private function arrayFlatten(array $array) {
+	    $flatten = array();
+	    array_walk_recursive($array, function($value) use(&$flatten) {
+	        $flatten[] = $value;
+	    });
+	    return $flatten;
+	}
+
+    protected function getVulnTypeData($type) {
+        if($type) {
+            switch($type) {
+                case 'SQL':
+                    return array(
+                        "'",
+                        '´',
+                        'SELECT FROM',
+                        'SELECT * FROM',
+                        'ONION',
+                        'union',
+                        'UNION',
+                        'UDPATE users SET',
+                        'WHERE username',
+                        'DROP TABLE',
+                        '0x50',
+                        'mid((select',
+                        'union(((((((',
+                        'concat(0x',
+                        'concat(',
+                        'OR boolean',
+                        'or HAVING',
+                        "OR '1",
+                        '0x3c62723e3c62723e3c62723e',
+                        '0x3c696d67207372633d22',
+                        '+#1q%0AuNiOn all#qa%0A#%0AsEleCt',
+                        'unhex(hex(Concat(',
+                        'Table_schema,0x3e,',
+                        '0x00',
+                        '0x08',
+                        '0x09',
+                        '0x0a',
+                        '0x0d',
+                        '0x1a',
+                        '0x22',
+                        '0x25',
+                        '0x27',
+                        '0x5c',
+                        '0x5f'
+                    );
+                break;
+
+                case 'XSS':
+                    return array('<img',
+                        'img>',
+                        '<image',
+                        'document.cookie',
+                        'onerror()',
+                        'script>',
+                        '<script',
+                        'alert(',
+                        'window.',
+                        'String.fromCharCode(',
+                        'javascript:',
+                        'onmouseover="',
+                        '<BODY onload',
+                        '<style',
+                        'svg onload'
+                    );
+                break;
+
+                default:
+                    return false;
+            }
         } else {
             return false;
         }
