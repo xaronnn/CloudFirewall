@@ -1,4 +1,4 @@
-<?php if(!defined('BASEPATH')) exit('Direct access not allowed');
+<?php
 
 namespace CF;
 
