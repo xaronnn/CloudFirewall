@@ -1,21 +1,19 @@
 <?php
-define('BASEPATH', true);
-require_once('./CloudFirewall.php');
+require_once('vendor/autoload.php');
 
+use CF\CloudFirewall;
 
 /*
 Init CloudFirewall class.
 */
-$firewall = new CloudFirewall('xaron@gmail.com', 'xaron12345');
-
+$firewall = new CloudFirewall('xaron@emailn.de', '4db180af1da0d37ddd9fc0e36ea442bf19f5a', 'zone_id (Not required if already set in function parameter)');
 
 /*
 Change security level.
 */
-$firewall->changeSecurityLevel('zone id', 'medium');
-
+$firewall->changeSecurityLevel('medium', 'zone_id (Not required if already set in constructor)');
 
 /*
-Ban IP address.
+Create access rule.
 */
-$firewall->blockIPv4('31.13.37.31');
+$firewall->createAccessRule('185.185.185.185', 'challenge');

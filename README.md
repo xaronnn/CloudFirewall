@@ -11,13 +11,14 @@ Protect your website against bots/spam/flood as using Cloudflare service.
 ![GitHub issues](https://img.shields.io/github/issues/xaronnn/CloudFirewall)
 
 ```php
-define('BASEPATH', true);
-require_once('./CloudFirewall.php');
+require_once('vendor/autoload.php');
+
+use CF\CloudFirewall;
 
 /*
 Init CloudFirewall class.
 */
-$firewall = new CloudFirewall('xaron@gmail.com', 'xaron12345');
+$firewall = new CloudFirewall('xaron@gmail.com', 'xaron12345', 'zone_id_optional');
 
 
 /*

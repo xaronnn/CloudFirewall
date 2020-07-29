@@ -6,38 +6,54 @@ class CloudFirewall {
 
     private $email;
     private $key;
+    private $zone;
     private $curl;
 
     /**
-     * CloudFirewall constructor
+     * CloudFirewall constructor.
      *
      * @param string $email The your Cloudflare email address.
      * @param string $key The your Cloudflare API key.
+     * @param string $zone The your Cloudflare zone.
      */
-    public function __construct($email, $key) {
+    public function __construct($email, $key, $zone = null) {
         $this->email = $email;
         $this->key = $key;
+        $this->zone = $zone;
     }
 
     /**
      * Changes security level on your zone.
      *
-     * @param string $value The security levels [low, medium, high, under_attack].
+     * @param string $value The security levels [essentially_off, low, medium, high, under_attack].
      * @param string $zone The zone id.
-     * @return bool True if request is handled.
+     * @return mixed Bool False if request is not responded. JSON if request success.
      */
-    public function changeSecurityLevel($value = 'low', $zone) {
-        return (!$this->checkSecurityLevel($value)) || (empty($zone)) ? false : $this->connect('https://api.cloudflare.com/client/v4/zones/'.$zone.'/settings/security_level', 'PATCH', array('value' => $value));
+    public function changeSecurityLevel($value = 'low', $zone = null) {
+        if($this->checkSecurityLevel($vlaue)) {
+            if($zone) {
+                return $this->connect('https://api.cloudflare.com/client/v4/zones/'.$zone.'/settings/security_level', 'PATCH', array('value' => $value));
+            } else {
+                return $this->connect('https://api.cloudflare.com/client/v4/zones/'.$this->zone.'/settings/security_level', 'PATCH', array('value' => $value));
+            }
+        } else {
+            return false;
+        }
     }
 
     /**
-     * Block an IP address on your zone.
+     * Create rule to specified IP address with an action.
      *
-     * @param string $value The IP address.
-     * @return bool True if request is handled.
+     * @param string $value The IP(v4/v6) address.
+     * @param string $action The action [block, challenge, whitelist, js_challenge].
+     * @return mixed Bool False if request is not responded. JSON if request success.
      */
-    public function blockIPv4($value) {
-        return (!$this->checkIPv4($value)) ? false : $this->connect('https://api.cloudflare.com/client/v4/user/firewall/access_rules/rules', 'POST', array('mode' => 'block', 'configuration' => array('target' => 'ip', 'value' => $value), 'notes' => 'End in '.date('d.m.Y H:i:s a', time()+300)));
+    public function createAccessRule($value, $action) {
+        if($this->checkIP($value) && $this->checkAccessRule($action)) {
+            return $this->connect('https://api.cloudflare.com/client/v4/user/firewall/access_rules/rules', 'POST', array('mode' => $action, 'configuration' => array('target' => ($this->checkIPv4($value) ? 'ip' : ($this->checkIPv4($value) ? 'ip6' : null)), 'value' => $value), 'notes' => 'Created by CloudFirewall'));
+        } else {
+            return false;
+        }
     }
 
     protected function connect($url, $request, $fields) {
@@ -60,9 +76,20 @@ class CloudFirewall {
     protected function checkSecurityLevel($value) {
         return (in_array($value, array('essentially_off', 'low', 'medium', 'high', 'under_attack'))) ? true : false;
     }
+    protected function checkAccessRule($value) {
+        return (in_array($value, array('essentialblockly_off', 'challenge', 'whitelist', 'js_challenge'))) ? true : false;
+    }
 
     protected function checkIPv4($value) {
         return (filter_var($value, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)) ? true : false;
+    }
+
+    protected function checkIPv6($value) {
+        return (filter_var($value, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6)) ? true : false;
+    }
+
+    protected function checkIP($value) {
+        return (filter_var($value, FILTER_VALIDATE_IP)) ? true : false;
     }
 
 }
