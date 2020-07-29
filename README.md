@@ -17,6 +17,7 @@ Protect your website against bots/spam/flood as using Cloudflare service.
 # Examples
 
 ```php
+<?php
 require_once('vendor/autoload.php');
 
 use CF\CloudFirewall;
