@@ -56,20 +56,11 @@ class CloudFirewall {
         }
     }
 
-
-    private function sqlCheck($value, $method, $displayName) {
-		$replace = array("can't" => "cant", "don't" => "dont");
-		foreach ($replace as $key => $value_rep) {
-			$value = str_replace($key, $value_rep, $value);
-		}
-		$badWords = $this->getArray('SQL');
-		foreach ($badWords as $badWord) {
-			if (strpos(strtolower($value), strtolower($badWord)) !== false) {
-                return json_encode(array('error' => true, 'message' => 'SQL injection detected, request is terminated.', 'data' => array('words' => $badWord, 'method' => $method, 'value' => $value)));
-			}
-		}
-    }
-
+    /**
+     * Enabling block SQL injection attacks.
+     *
+     * @return none.
+     */
     public function sqlInjectionBlock() {
         foreach ($_GET as $key => $value) {
 			if (is_array($value)) {
@@ -102,8 +93,27 @@ class CloudFirewall {
 			}
 		}
     }
-    
 
+    private function sqlCheck($value, $method, $displayName) {
+		$replace = array("can't" => "cant", "don't" => "dont");
+		foreach ($replace as $key => $value_rep) {
+			$value = str_replace($key, $value_rep, $value);
+		}
+		$badWords = $this->getVulnTypeData('SQL');
+		foreach ($badWords as $badWord) {
+			if (strpos(strtolower($value), strtolower($badWord)) !== false) {
+                header('HTTP/1.0 403 Forbidden');
+                echo json_encode(array('error' => true, 'message' => 'SQL injection detected, request is terminated and request IP address has banned from Cloudflare.', 'data' => array('word' => $badWord, 'request_method' => $method)));
+                $this->createAccessRule($this->getIP(), 'block');
+                die();
+                return;
+            }
+		}
+    }
+
+    protected function getIP() {
+        return ($_SERVER['HTTP_CF_CONNECTING_IP'] ? $_SERVER['HTTP_CF_CONNECTING_IP'] : $_SERVER['REMOTE_ADDR']);
+    }
 
     private function arrayFlatten(array $array) {
 	    $flatten = array();
@@ -203,7 +213,7 @@ class CloudFirewall {
         return (in_array($value, array('essentially_off', 'low', 'medium', 'high', 'under_attack'))) ? true : false;
     }
     protected function checkAccessRule($value) {
-        return (in_array($value, array('essentialblockly_off', 'challenge', 'whitelist', 'js_challenge'))) ? true : false;
+        return (in_array($value, array('block', 'challenge', 'whitelist', 'js_challenge'))) ? true : false;
     }
 
     protected function checkIPv4($value) {
@@ -215,7 +225,7 @@ class CloudFirewall {
     }
 
     protected function checkIP($value) {
-        return (filter_var($value, FILTER_VALIDATE_IP)) ? true : false;
+        return (filter_var($value, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4) || filter_var($value, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6)) ? true : false;
     }
 
 }

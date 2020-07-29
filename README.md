@@ -37,7 +37,12 @@ $firewall->changeSecurityLevel('medium', 'zone_id (Not required if already set i
 Create access rule.
 Actions: [block, challenge, whitelist, js_challenge]
 */
-$firewall->createAccessRule('185.185.185.185', 'challenge');
+$firewall->createAccessRule('31.13.37.31', 'challenge');
+
+/*
+Enabling block SQL injection attacks and it will ban from Cloudflare.
+*/
+$firewall->sqlInjectionBlock();
 ```
 
 # Requirements
