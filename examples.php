@@ -25,4 +25,9 @@ $firewall->createAccessRule('31.13.37.31', 'block');
 Enabling block SQL injection attacks and it will ban from Cloudflare.
 */
 $firewall->sqlInjectionBlock();
+
+/*
+Enabling block XSS injection attacks and it will ban from Cloudflare.
+*/
+$firewall->xssInjectionBlock();
 ?>

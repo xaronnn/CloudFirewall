@@ -94,8 +94,62 @@ class CloudFirewall {
 		}
     }
 
+    /**
+     * Enabling block XSS injection attacks.
+     *
+     * @return none.
+     */
+    public function xssInjectionBlock() {
+        foreach ($_GET as $key => $value) {
+			if (is_array($value)) {
+				$flattened = $this->arrayFlatten($value);
+				foreach ($flattened as $sub_key => $sub_value) {
+					$this->xssCheck($sub_value, "_GET", $sub_key);
+				}
+			} else {
+				$this->xssCheck($value, "_GET", $key);
+			}
+        }
+        foreach ($_POST as $key => $value) {
+			if (is_array($value)) {
+				$flattened = $this->arrayFlatten($value);
+				foreach ($flattened as $sub_key => $sub_value) {
+					$this->xssCheck($sub_value, "_POST", $sub_key);
+				}
+			} else {
+				$this->xssCheck($value, "_POST", $key);
+			}
+        }
+        foreach ($_COOKIE as $key => $value) {
+			if (is_array($value)) {
+				$flattened = $this->arrayFlatten($value);
+				foreach ($flattened as $sub_key => $sub_value) {
+					$this->xssCheck($sub_value, "_COOKIE", $sub_key);
+				}
+			} else {
+				$this->xssCheck($value, "_COOKIE", $key);
+			}
+		}
+    }
+
+    private function xssCheck($value, $method, $displayName) {
+		$replace = array("<3" => ":heart:");
+		foreach ($replace as $key => $value_rep) {
+			$value = str_replace($key, $value_rep, $value);
+		}
+		$badWords = $this->getVulnTypeData('XSS');
+		foreach ($badWords as $badWord) {
+			if (strpos(strtolower($value), strtolower($badWord)) !== false) {
+			    header('HTTP/1.0 403 Forbidden');
+                echo json_encode(array('error' => true, 'message' => 'XSS injection detected, request is terminated and request IP address has banned from Cloudflare.', 'data' => array('word' => $badWord, 'request_method' => $method)));
+                $this->createAccessRule($this->getIP(), 'block');
+                die();
+			}
+		}
+	}
+
     private function sqlCheck($value, $method, $displayName) {
-		$replace = array("can't" => "cant", "don't" => "dont");
+		$replace = array("can't" => "can not", "don't" => "do not");
 		foreach ($replace as $key => $value_rep) {
 			$value = str_replace($key, $value_rep, $value);
 		}
