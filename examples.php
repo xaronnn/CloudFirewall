@@ -23,19 +23,19 @@ $firewall->createAccessRule('31.13.37.31', 'block');
 
 /*
 Enabling block SQL injection attacks and it will ban from Cloudflare.
-Parameters: sqlInjectionBlock(true if you want, request ip ban from Cloudflare. default is true.)
+Parameters: sqlInjectionBlock(true if you want request ip ban from Cloudflare. default is true.)
 */
 $firewall->sqlInjectionBlock();
 
 /*
 Enabling block XSS injection attacks and it will ban from Cloudflare.
-Parameters: xssInjectionBlock(true if you want, request ip ban from Cloudflare. default is true.)
+Parameters: xssInjectionBlock(true if you want request ip ban from Cloudflare. default is true.)
 */
 $firewall->xssInjectionBlock();
 
 /*
 Enabling block cookie steal attacks.
-Parameters: cookieStealBlock(true if you want, request ip ban from Cloudflare. default is true.)
+Parameters: cookieStealBlock(true if you want request ip ban from Cloudflare. default is true.)
 */
 $firewall->cookieStealBlock();
 
