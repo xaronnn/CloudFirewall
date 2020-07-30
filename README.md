@@ -18,7 +18,7 @@ Protect your website against bots/spam/flood, sql/xss injection attacks as using
 
 ```php
 <?php
-require_once('vendor/autoload.php');
+require_once __DIR__ . '/vendor/autoload.php';
 
 use CF\CloudFirewall;
 
