@@ -16,7 +16,7 @@ class CloudFirewall {
     private $zone;
     private $curl;
     private $debug;
-    protected $version = '0.1.4.3';
+    protected $version = '0.1.4.4';
 
     /**
      * CloudFirewall constructor.
