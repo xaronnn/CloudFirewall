@@ -16,7 +16,7 @@ Protect your website against bots/spam/flood, sql/xss injection attacks as using
 
 # WHMCS Module
 
-`Download: [https://github.com/xaronnn/CloudFirewall/raw/master/CloudFirewallWHMCS.rar](https://github.com/xaronnn/CloudFirewall/raw/master/CloudFirewallWHMCS.rar)`
+`Download: https://github.com/xaronnn/CloudFirewall/raw/master/CloudFirewallWHMCS.rar`
 
 `Export files to your main WHMCS directory.`
 
