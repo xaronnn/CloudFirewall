@@ -2,7 +2,7 @@
     "name": "xaron/cloud-firewall",
     "type": "library",
     "description": "Protect your website against bots/spam/flood as using Cloudflare service.",
-    "keywords": ["cloudflare", "ddos", "block", "firewall", "sql injection", "xss injection", "flood", "protection"],
+    "keywords": ["php", "cloudflare", "ddos", "block", "firewall", "sql", "injection", "xss", "flood", "protection"],
     "homepage": "https://xaron.us",
     "license": "MIT",
     "authors": [
