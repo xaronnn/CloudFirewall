@@ -21,6 +21,9 @@ class CloudFirewall {
         $this->email = $email;
         $this->key = $key;
         $this->zone = $zone;
+        if(isset($_SESSION)) {
+            $_SESSION['CloudFirewall-Client-IP'] = $this->getIP();
+        }
     }
 
     /**
@@ -147,16 +150,47 @@ class CloudFirewall {
     public function cookieStealBlock() {
 		if (isset($_SESSION)) {
             if (!isset($_SESSION['CloudFirewall-Client-IP'])) {
-                $_SESSION['CloudFirewall-Client-IP'] = $_SERVER[($_SERVER['HTTP_CF_CONNECTING_IP'] ? 'HTTP_CF_CONNECTING_IP' : 'REMOTE_ADDR')];
+                $_SESSION['CloudFirewall-Client-IP'] = $this->getIP();
             } else {
-                if ($_SESSION['CloudFirewall-Client-IP'] != $_SERVER[($_SERVER['HTTP_CF_CONNECTING_IP'] ? 'HTTP_CF_CONNECTING_IP' : 'REMOTE_ADDR')]) {
+                if ($_SESSION['CloudFirewall-Client-IP'] != $this->getIP()) {
                     header('HTTP/1.0 403 Forbidden');
                     session_destroy();
                     die();
                 }
             }
         }
-	}
+    }
+    
+    public function antiFlood($requestPerSecond = 2, $badRequestChance = 3, $badRequestReset = 5, $ban = false) {
+        if(isset($_SESSION)) {
+            if(!isset($_SESSION['CloudFirewall-Client-LastRequestTime']) && !isset($_SESSION['CloudFirewall-Client-BadRequest'])) {
+                $_SESSION['CloudFirewall-Client-LastRequestTime'] = time();
+                $_SESSION['CloudFirewall-Client-BadRequest'] = 0;
+            } else {
+                if(isset($_SESSION['CloudFirewall-Client-LastBadRequestTime'])) {
+                    if($_SESSION['CloudFirewall-Client-LastBadRequestTime']+$badRequestReset <= time()) {
+                        unset($_SESSION['CloudFirewall-Client-LastBadRequestTime']);
+                        $_SESSION['CloudFirewall-Client-BadRequest'] = 0;
+                    }
+                }
+                if($_SESSION['CloudFirewall-Client-BadRequest'] >= $badRequestChance) {
+                    if($ban == true) {
+                        header('HTTP/1.0 403 Forbidden');
+                        $this->createAccessRule($this->getIP(), 'block');
+                        die();
+                    } else {
+                        header('HTTP/1.0 403 Forbidden');
+                        die();
+                    }
+                }
+                if($_SESSION['CloudFirewall-Client-LastRequestTime'] >= time()) {
+                    $_SESSION['CloudFirewall-Client-LastBadRequestTime'] = time()+$requestPerSecond;
+                    $_SESSION['CloudFirewall-Client-BadRequest'] = $_SESSION['CloudFirewall-Client-BadRequest']+1;
+                }
+            }
+            $_SESSION['CloudFirewall-Client-LastRequestTime'] = time();
+        }
+    }
 
     /**
      * Enable debug mode.
@@ -166,6 +200,7 @@ class CloudFirewall {
     public function debug($debug = false) {
         $this->debug = $debug;
     }
+
 
     private function xssCheck($value, $method, $displayName) {
 		$replace = array("<3" => ":heart:");

@@ -53,6 +53,12 @@ $firewall->xssInjectionBlock();
 Enabling block cookie steal attacks.
 */
 $firewall->cookieStealBlock();
+
+/*
+Enabling anti flood.
+Parameters: antiFlood(requestPerSecond, badRequestChance, badRequestResetInXseconds, banFromCloudflare)
+*/
+$firewall->antiFlood(2, 3, 5, true);
 ```
 
 # Requirements
