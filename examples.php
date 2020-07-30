@@ -30,4 +30,9 @@ $firewall->sqlInjectionBlock();
 Enabling block XSS injection attacks and it will ban from Cloudflare.
 */
 $firewall->xssInjectionBlock();
+
+/*
+Enabling block cookie steal attacks.
+*/
+$firewall->cookieStealBlock();
 ?>

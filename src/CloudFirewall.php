@@ -8,6 +8,7 @@ class CloudFirewall {
     private $key;
     private $zone;
     private $curl;
+    private $debug;
 
     /**
      * CloudFirewall constructor.
@@ -104,32 +105,60 @@ class CloudFirewall {
 			if (is_array($value)) {
 				$flattened = $this->arrayFlatten($value);
 				foreach ($flattened as $sub_key => $sub_value) {
-					$this->xssCheck($sub_value, "_GET", $sub_key);
+					$this->xssCheck($sub_value, "GET", $sub_key);
 				}
 			} else {
-				$this->xssCheck($value, "_GET", $key);
+				$this->xssCheck($value, "GET", $key);
 			}
         }
         foreach ($_POST as $key => $value) {
 			if (is_array($value)) {
 				$flattened = $this->arrayFlatten($value);
 				foreach ($flattened as $sub_key => $sub_value) {
-					$this->xssCheck($sub_value, "_POST", $sub_key);
+					$this->xssCheck($sub_value, "POST", $sub_key);
 				}
 			} else {
-				$this->xssCheck($value, "_POST", $key);
+				$this->xssCheck($value, "POST", $key);
 			}
         }
         foreach ($_COOKIE as $key => $value) {
 			if (is_array($value)) {
 				$flattened = $this->arrayFlatten($value);
 				foreach ($flattened as $sub_key => $sub_value) {
-					$this->xssCheck($sub_value, "_COOKIE", $sub_key);
+					$this->xssCheck($sub_value, "COOKIE", $sub_key);
 				}
 			} else {
-				$this->xssCheck($value, "_COOKIE", $key);
+				$this->xssCheck($value, "COOKIE", $key);
 			}
 		}
+    }
+
+    /**
+     * Enabling block steal cookie attacks.
+     *
+     * @return none.
+     */
+    public function cookieStealBlock() {
+		if (isset($_SESSION)) {
+            if (!isset($_SESSION['CloudFirewall-Client-IP'])) {
+                $_SESSION['CloudFirewall-Client-IP'] = $_SERVER[($_SERVER['HTTP_CF_CONNECTING_IP'] ? 'HTTP_CF_CONNECTING_IP' : 'REMOTE_ADDR')];
+            } else {
+                if ($_SESSION['CloudFirewall-Client-IP'] != $_SERVER[($_SERVER['HTTP_CF_CONNECTING_IP'] ? 'HTTP_CF_CONNECTING_IP' : 'REMOTE_ADDR')]) {
+                    header('HTTP/1.0 403 Forbidden');
+                    session_destroy();
+                    die();
+                }
+            }
+        }
+	}
+
+    /**
+     * Enable debug mode.
+     *
+     * @return none.
+     */
+    public function debug($debug = false) {
+        $this->debug = $debug;
     }
 
     private function xssCheck($value, $method, $displayName) {
@@ -186,6 +215,8 @@ class CloudFirewall {
                 'ONION',
                 'union',
                 'UNION',
+                'TRUNCATE TABLE',
+                'INSERT INTO',
                 'UDPATE users SET',
                 'WHERE username',
                 'DROP TABLE',
@@ -228,7 +259,8 @@ class CloudFirewall {
                 'onmouseover="',
                 '<BODY onload',
                 '<style',
-                'svg onload'
+                'svg onload',
+                'onclick='
             );
             return $vuln[$type];
         } else {
