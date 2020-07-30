@@ -17,7 +17,7 @@ class CloudFirewall {
      * @param string $key The your Cloudflare API key.
      * @param string $zone The your Cloudflare zone.
      */
-    public function __construct($email, $key, $zone = null) {
+    public function __construct(string $email, string $key, string $zone = null) {
         $this->email = $email;
         $this->key = $key;
         $this->zone = $zone;
@@ -33,7 +33,7 @@ class CloudFirewall {
      * @param string $zone The zone id.
      * @return mixed Bool False if request is not responded. JSON if request success.
      */
-    public function changeSecurityLevel($value = 'low', $zone = null) {
+    public function changeSecurityLevel(string $value = 'low', string $zone = null) {
         if($this->checkSecurityLevel($value)) {
             if($zone) {
                 return $this->connect('https://api.cloudflare.com/client/v4/zones/'.$zone.'/settings/security_level', 'PATCH', array('value' => $value));
@@ -52,7 +52,7 @@ class CloudFirewall {
      * @param string $action The action [block, challenge, whitelist, js_challenge].
      * @return mixed Bool False if request is not responded. JSON if request success.
      */
-    public function createAccessRule($value, $action) {
+    public function createAccessRule(string $value, string $action) {
         if($this->checkIP($value) && $this->checkAccessRule($action)) {
             return $this->connect('https://api.cloudflare.com/client/v4/user/firewall/access_rules/rules', 'POST', array('mode' => $action, 'configuration' => array('target' => ($this->checkIPv4($value) ? 'ip' : ($this->checkIPv4($value) ? 'ip6' : null)), 'value' => $value), 'notes' => 'Created by CloudFirewall'));
         } else {
@@ -161,7 +161,7 @@ class CloudFirewall {
         }
     }
     
-    public function antiFlood($requestPerSecond = 2, $badRequestChance = 3, $badRequestReset = 5, $ban = false) {
+    public function antiFlood(int $requestPerSecond = 2, int $badRequestChance = 3, int $badRequestReset = 5, bool $ban = false) {
         if(isset($_SESSION)) {
             if(!isset($_SESSION['CloudFirewall-Client-LastRequestTime']) && !isset($_SESSION['CloudFirewall-Client-BadRequest'])) {
                 $_SESSION['CloudFirewall-Client-LastRequestTime'] = time();
@@ -197,12 +197,12 @@ class CloudFirewall {
      *
      * @return none.
      */
-    public function debug($debug = false) {
+    public function debug(bool $debug = false) {
         $this->debug = $debug;
     }
 
 
-    private function xssCheck($value, $method, $displayName) {
+    private function xssCheck(string $value, string $method, string $displayName) {
 		$replace = array("<3" => ":heart:");
 		foreach ($replace as $key => $value_rep) {
 			$value = str_replace($key, $value_rep, $value);
@@ -218,7 +218,7 @@ class CloudFirewall {
 		}
 	}
 
-    private function sqlCheck($value, $method, $displayName) {
+    private function sqlCheck(string $value, string $method, string $displayName) {
 		$replace = array("can't" => "can not", "don't" => "do not");
 		foreach ($replace as $key => $value_rep) {
 			$value = str_replace($key, $value_rep, $value);
@@ -234,7 +234,7 @@ class CloudFirewall {
 		}
     }
 
-    private function htmlCheck($value, $method, $displayName) {
+    private function htmlCheck(string $value, string $method, string $displayName) {
 		if ($this->is_html(strtolower($value)) !== false) {
 			header('HTTP/1.0 403 Forbidden');
             //echo json_encode(array('error' => true, 'message' => 'XSS injection detected, request is terminated and request IP address has banned from Cloudflare.', 'data' => array('word' => $badWord, 'request_method' => $method)));
@@ -243,7 +243,7 @@ class CloudFirewall {
 		}
     }
     
-    protected function is_html($string) {
+    protected function is_html(string $string) {
 		return ($string != strip_tags($string) ? true : false);
 	}
 
@@ -259,7 +259,7 @@ class CloudFirewall {
 	    return $flatten;
 	}
 
-    protected function getVulnTypeData($type) {
+    protected function getVulnTypeData(string $type) {
         if($type && in_array($type, array('SQL', 'XSS'))) {
             $vuln['SQL'] = array(
                 "'",
@@ -333,7 +333,7 @@ class CloudFirewall {
         }
     }
 
-    protected function connect($url, $request, $fields) {
+    protected function connect(string $url, string $request, array $fields) {
         $this->curl = curl_init();
         curl_setopt($this->curl, CURLOPT_URL, $url);
         curl_setopt($this->curl, CURLOPT_RETURNTRANSFER, 1);
@@ -349,22 +349,22 @@ class CloudFirewall {
         return curl_exec($this->curl);
     }
 
-    protected function checkSecurityLevel($value) {
+    protected function checkSecurityLevel(string $value) {
         return (in_array($value, array('essentially_off', 'low', 'medium', 'high', 'under_attack'))) ? true : false;
     }
-    protected function checkAccessRule($value) {
+    protected function checkAccessRule(string $value) {
         return (in_array($value, array('block', 'challenge', 'whitelist', 'js_challenge'))) ? true : false;
     }
 
-    protected function checkIPv4($value) {
+    protected function checkIPv4(string $value) {
         return (filter_var($value, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)) ? true : false;
     }
 
-    protected function checkIPv6($value) {
+    protected function checkIPv6(string $value) {
         return (filter_var($value, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6)) ? true : false;
     }
 
-    protected function checkIP($value) {
+    protected function checkIP(string $value) {
         return (filter_var($value, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4) || filter_var($value, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6)) ? true : false;
     }
 
