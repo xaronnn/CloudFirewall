@@ -1,7 +1,6 @@
 <?php
 
 namespace CF;
-
 class CloudFirewall {
 
     private $email;
@@ -24,6 +23,12 @@ class CloudFirewall {
         if(isset($_SESSION)) {
             $_SESSION['CloudFirewall-Client-IP'] = $this->getIP();
         }
+        set_error_handler(function($errno, $errstr, $errfile, $errline ) {
+            throw new ErrorException($errstr, $errno, 0, $errfile, $errline);
+        });
+        set_exception_handler(function($exception) {
+            $this->abort(500, $exception->getMessage());
+        });
     }
 
     /**
@@ -63,37 +68,38 @@ class CloudFirewall {
     /**
      * Enabling block SQL injection attacks.
      *
+     * @param bool $ban Default is true and it will ban from Cloudflare.
      * @return none.
      */
-    public function sqlInjectionBlock() {
+    public function sqlInjectionBlock(bool $ban = true) {
         foreach ($_GET as $key => $value) {
 			if (is_array($value)) {
 				$flattened = $this->arrayFlatten($value);
 				foreach ($flattened as $sub_key => $sub_value) {
-					$this->sqlCheck($sub_value, "_GET", $sub_key);
+					$this->sqlCheck($sub_value, "_GET", $sub_key, $ban);
 				}
 			} else {
-				$this->sqlCheck($value, "_GET", $key);
+				$this->sqlCheck($value, "_GET", $key, $ban);
 			}
         }
         foreach ($_POST as $key => $value) {
 			if (is_array($value)) {
 				$flattened = $this->arrayFlatten($value);
 				foreach ($flattened as $sub_key => $sub_value) {
-					$this->sqlCheck($sub_value, "_POST", $sub_key);
+					$this->sqlCheck($sub_value, "_POST", $sub_key, $ban);
 				}
 			} else {
-				$this->sqlCheck($value, "_POST", $key);
+				$this->sqlCheck($value, "_POST", $key, $ban);
 			}
         }
         foreach ($_COOKIE as $key => $value) {
 			if (is_array($value)) {
 				$flattened = $this->arrayFlatten($value);
 				foreach ($flattened as $sub_key => $sub_value) {
-					$this->sqlCheck($sub_value, "_COOKIE", $sub_key);
+					$this->sqlCheck($sub_value, "_COOKIE", $sub_key, $ban);
 				}
 			} else {
-				$this->sqlCheck($value, "_COOKIE", $key);
+				$this->sqlCheck($value, "_COOKIE", $key, $ban);
 			}
 		}
     }
@@ -101,43 +107,44 @@ class CloudFirewall {
     /**
      * Enabling block XSS injection attacks.
      *
+     * @param bool $ban Default is true and it will ban from Cloudflare.
      * @return none.
      */
-    public function xssInjectionBlock() {
+    public function xssInjectionBlock(bool $ban = true) {
         foreach ($_GET as $key => $value) {
 			if (is_array($value)) {
 				$flattened = $this->arrayFlatten($value);
 				foreach ($flattened as $sub_key => $sub_value) {
-                    $this->xssCheck($sub_value, "GET", $sub_key);
-                    $this->htmlCheck($sub_value, "GET", $sub_key);
+                    $this->xssCheck($sub_value, "GET", $sub_key, $ban);
+                    $this->htmlCheck($sub_value, "GET", $sub_key, $ban);
 				}
 			} else {
-                $this->xssCheck($value, "GET", $key);
-                $this->htmlCheck($value, "GET", $key);
+                $this->xssCheck($value, "GET", $key, $ban);
+                $this->htmlCheck($value, "GET", $key, $ban);
 			}
         }
         foreach ($_POST as $key => $value) {
 			if (is_array($value)) {
 				$flattened = $this->arrayFlatten($value);
 				foreach ($flattened as $sub_key => $sub_value) {
-                    $this->xssCheck($sub_value, "POST", $sub_key);
-                    $this->htmlCheck($sub_value, "POST", $sub_key);
+                    $this->xssCheck($sub_value, "POST", $sub_key, $ban);
+                    $this->htmlCheck($sub_value, "POST", $sub_key, $ban);
 				}
 			} else {
-                $this->xssCheck($value, "POST", $key);
-                $this->htmlCheck($value, "POST", $key);
+                $this->xssCheck($value, "POST", $key, $ban);
+                $this->htmlCheck($value, "POST", $key, $ban);
 			}
         }
         foreach ($_COOKIE as $key => $value) {
 			if (is_array($value)) {
 				$flattened = $this->arrayFlatten($value);
 				foreach ($flattened as $sub_key => $sub_value) {
-                    $this->xssCheck($sub_value, "COOKIE", $sub_key);
-                    $this->htmlCheck($sub_value, "COOKIE", $sub_key);
+                    $this->xssCheck($sub_value, "COOKIE", $sub_key, $ban);
+                    $this->htmlCheck($sub_value, "COOKIE", $sub_key, $ban);
 				}
 			} else {
-                $this->xssCheck($value, "COOKIE", $key);
-                $this->htmlCheck($value, "COOKIE", $key);
+                $this->xssCheck($value, "COOKIE", $key, $ban);
+                $this->htmlCheck($value, "COOKIE", $key, $ban);
 			}
 		}
     }
@@ -145,17 +152,20 @@ class CloudFirewall {
     /**
      * Enabling block steal cookie attacks.
      *
+     * @param bool $ban Default is true and it will ban from Cloudflare.
      * @return none.
      */
-    public function cookieStealBlock() {
+    public function cookieStealBlock(bool $ban = true) {
 		if (isset($_SESSION)) {
             if (!isset($_SESSION['CloudFirewall-Client-IP'])) {
                 $_SESSION['CloudFirewall-Client-IP'] = $this->getIP();
             } else {
                 if ($_SESSION['CloudFirewall-Client-IP'] != $this->getIP()) {
-                    header('HTTP/1.0 403 Forbidden');
+                    if($ban) {
+                        $this->createAccessRule($this->getIP(), 'block');
+                    }
                     session_destroy();
-                    die();
+                    $this->abort(403, 'Cookie Stealing Detected');
                 }
             }
         }
@@ -174,14 +184,10 @@ class CloudFirewall {
                     }
                 }
                 if($_SESSION['CloudFirewall-Client-BadRequest'] >= $badRequestChance) {
-                    if($ban == true) {
-                        header('HTTP/1.0 403 Forbidden');
+                    if($ban) {
                         $this->createAccessRule($this->getIP(), 'block');
-                        die();
-                    } else {
-                        header('HTTP/1.0 403 Forbidden');
-                        die();
                     }
+                    $this->abort(403, 'Flood Detected');
                 }
                 if($_SESSION['CloudFirewall-Client-LastRequestTime'] >= time()) {
                     $_SESSION['CloudFirewall-Client-LastBadRequestTime'] = time()+$requestPerSecond;
@@ -201,8 +207,17 @@ class CloudFirewall {
         $this->debug = $debug;
     }
 
+    private function abort(int $status, string $message = null) {
+        $statusses = ['404', '403', '500'];
+        if(in_array($status, $statusses)) {
+            header('HTTP/1.0 '.$status.' Forbidden');
+            die('<!DOCTYPE html><html lang="en"><head> <meta charset="UTF-8"> <meta name="viewport" content="width=device-width, initial-scale=1.0"> <title>'.$status.'</title> <style type="text/css">*{transition: all .6s}html{height: 100%}body{font-family: Lato, sans-serif; color: #888; margin: 0}#main{display: table; width: 100%; height: 100vh; text-align: center}.fof{display: table-cell; vertical-align: middle}h1{font-size: 50px; display: inline-block; padding-right: 12px; animation: type .5s alternate infinite}h3{font-size: 30px; padding-right: 12px; animation: type .5s alternate infinite}@keyframes type{from{box-shadow: inset -3px 0 0 #888}to{box-shadow: inset -3px 0 0 transparent}}</style></head><body><div id="main"> <div class="fof"> <h1>'.$status.'</h1>'.($message ? '<h3>'.$message.'</h3>' : '').' </div></div></body></html>');
+        } else {
+            return false;
+        }
+    }
 
-    private function xssCheck(string $value, string $method, string $displayName) {
+    private function xssCheck(string $value, string $method, string $displayName, bool $ban) {
 		$replace = array("<3" => ":heart:");
 		foreach ($replace as $key => $value_rep) {
 			$value = str_replace($key, $value_rep, $value);
@@ -210,15 +225,15 @@ class CloudFirewall {
 		$badWords = $this->getVulnTypeData('XSS');
 		foreach ($badWords as $badWord) {
 			if (strpos(strtolower($value), strtolower($badWord)) !== false) {
-			    header('HTTP/1.0 403 Forbidden');
-                //echo json_encode(array('error' => true, 'message' => 'XSS injection detected, request is terminated and request IP address has banned from Cloudflare.', 'data' => array('word' => $badWord, 'request_method' => $method)));
-                $this->createAccessRule($this->getIP(), 'block');
-                die();
+                if($ban) {
+                    $this->createAccessRule($this->getIP(), 'block');
+                }
+                $this->abort(403, 'XSS Injection Detected');
 			}
 		}
 	}
 
-    private function sqlCheck(string $value, string $method, string $displayName) {
+    private function sqlCheck(string $value, string $method, string $displayName, bool $ban) {
 		$replace = array("can't" => "can not", "don't" => "do not");
 		foreach ($replace as $key => $value_rep) {
 			$value = str_replace($key, $value_rep, $value);
@@ -226,20 +241,20 @@ class CloudFirewall {
 		$badWords = $this->getVulnTypeData('SQL');
 		foreach ($badWords as $badWord) {
 			if (strpos(strtolower($value), strtolower($badWord)) !== false) {
-                header('HTTP/1.0 403 Forbidden');
-                //echo json_encode(array('error' => true, 'message' => 'SQL injection detected, request is terminated and request IP address has banned from Cloudflare.', 'data' => array('word' => $badWord, 'request_method' => $method)));
-                $this->createAccessRule($this->getIP(), 'block');
-                die();
+                if($ban) {
+                    $this->createAccessRule($this->getIP(), 'block');
+                }
+                $this->abort(403, 'SQL Injection Detected');
             }
 		}
     }
 
-    private function htmlCheck(string $value, string $method, string $displayName) {
+    private function htmlCheck(string $value, string $method, string $displayName, bool $ban) {
 		if ($this->is_html(strtolower($value)) !== false) {
-			header('HTTP/1.0 403 Forbidden');
-            //echo json_encode(array('error' => true, 'message' => 'XSS injection detected, request is terminated and request IP address has banned from Cloudflare.', 'data' => array('word' => $badWord, 'request_method' => $method)));
-            $this->createAccessRule($this->getIP(), 'block');
-            die();
+            if($ban) {
+                $this->createAccessRule($this->getIP(), 'block');
+            }
+            $this->abort(403, 'XSS Injection Detected');
 		}
     }
     
