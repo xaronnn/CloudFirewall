@@ -105,30 +105,36 @@ class CloudFirewall {
 			if (is_array($value)) {
 				$flattened = $this->arrayFlatten($value);
 				foreach ($flattened as $sub_key => $sub_value) {
-					$this->xssCheck($sub_value, "GET", $sub_key);
+                    $this->xssCheck($sub_value, "GET", $sub_key);
+                    $this->htmlCheck($sub_value, "GET", $sub_key);
 				}
 			} else {
-				$this->xssCheck($value, "GET", $key);
+                $this->xssCheck($value, "GET", $key);
+                $this->htmlCheck($value, "GET", $key);
 			}
         }
         foreach ($_POST as $key => $value) {
 			if (is_array($value)) {
 				$flattened = $this->arrayFlatten($value);
 				foreach ($flattened as $sub_key => $sub_value) {
-					$this->xssCheck($sub_value, "POST", $sub_key);
+                    $this->xssCheck($sub_value, "POST", $sub_key);
+                    $this->htmlCheck($sub_value, "POST", $sub_key);
 				}
 			} else {
-				$this->xssCheck($value, "POST", $key);
+                $this->xssCheck($value, "POST", $key);
+                $this->htmlCheck($value, "POST", $key);
 			}
         }
         foreach ($_COOKIE as $key => $value) {
 			if (is_array($value)) {
 				$flattened = $this->arrayFlatten($value);
 				foreach ($flattened as $sub_key => $sub_value) {
-					$this->xssCheck($sub_value, "COOKIE", $sub_key);
+                    $this->xssCheck($sub_value, "COOKIE", $sub_key);
+                    $this->htmlCheck($sub_value, "COOKIE", $sub_key);
 				}
 			} else {
-				$this->xssCheck($value, "COOKIE", $key);
+                $this->xssCheck($value, "COOKIE", $key);
+                $this->htmlCheck($value, "COOKIE", $key);
 			}
 		}
     }
@@ -170,7 +176,7 @@ class CloudFirewall {
 		foreach ($badWords as $badWord) {
 			if (strpos(strtolower($value), strtolower($badWord)) !== false) {
 			    header('HTTP/1.0 403 Forbidden');
-                echo json_encode(array('error' => true, 'message' => 'XSS injection detected, request is terminated and request IP address has banned from Cloudflare.', 'data' => array('word' => $badWord, 'request_method' => $method)));
+                //echo json_encode(array('error' => true, 'message' => 'XSS injection detected, request is terminated and request IP address has banned from Cloudflare.', 'data' => array('word' => $badWord, 'request_method' => $method)));
                 $this->createAccessRule($this->getIP(), 'block');
                 die();
 			}
@@ -186,12 +192,25 @@ class CloudFirewall {
 		foreach ($badWords as $badWord) {
 			if (strpos(strtolower($value), strtolower($badWord)) !== false) {
                 header('HTTP/1.0 403 Forbidden');
-                echo json_encode(array('error' => true, 'message' => 'SQL injection detected, request is terminated and request IP address has banned from Cloudflare.', 'data' => array('word' => $badWord, 'request_method' => $method)));
+                //echo json_encode(array('error' => true, 'message' => 'SQL injection detected, request is terminated and request IP address has banned from Cloudflare.', 'data' => array('word' => $badWord, 'request_method' => $method)));
                 $this->createAccessRule($this->getIP(), 'block');
                 die();
             }
 		}
     }
+
+    private function htmlCheck($value, $method, $displayName) {
+		if ($this->is_html(strtolower($value)) !== false) {
+			header('HTTP/1.0 403 Forbidden');
+            //echo json_encode(array('error' => true, 'message' => 'XSS injection detected, request is terminated and request IP address has banned from Cloudflare.', 'data' => array('word' => $badWord, 'request_method' => $method)));
+            $this->createAccessRule($this->getIP(), 'block');
+            die();
+		}
+    }
+    
+    protected function is_html($string) {
+		return ($string != strip_tags($string) ? true : false);
+	}
 
     protected function getIP() {
         return ($_SERVER['HTTP_CF_CONNECTING_IP'] ? $_SERVER['HTTP_CF_CONNECTING_IP'] : $_SERVER['REMOTE_ADDR']);
@@ -247,6 +266,17 @@ class CloudFirewall {
             );
             $vuln['XSS'] = array('<img',
                 'img>',
+                'style=',
+                '<table',
+                '<td',
+                '<tr',
+                '<b',
+                '<font',
+                '<br',
+                '</br',
+                '<a ',
+                'href',
+                '<h',
                 '<image',
                 'document.cookie',
                 'onerror()',
