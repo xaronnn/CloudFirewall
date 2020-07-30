@@ -11,11 +11,7 @@ namespace CF;
 
 class CloudFirewall {
 
-    private $email;
-    private $key;
-    private $zone;
-    private $curl;
-    private $debug;
+    private $email, $key, $zone, $curl, $debug;
     protected $version = '0.1.4.4';
 
     /**
@@ -29,20 +25,21 @@ class CloudFirewall {
         $this->email = $email;
         $this->key = $key;
         $this->zone = $zone;
-        $this->benchmarkStart = $this->benchmarkStart();
+        $this->benchmarkStart = self::benchmarkStart();
         if(isset($_SESSION)) {
-            $_SESSION['CloudFirewall-Client-IP'] = $this->getIP();
+            $_SESSION['CloudFirewall-Client-IP'] = self::getIP();
         } else {
             session_start();
-            $_SESSION['CloudFirewall-Client-IP'] = $this->getIP();
+            $_SESSION['CloudFirewall-Client-IP'] = self::getIP();
         }
         set_error_handler(function($errno, $errstr, $errfile, $errline) {
-            $this->abort(500, 'Error: '.$errstr.' - Error Code '.$errno.'<br/><br/>File: '.$errfile.' - Line <strong>'.$errline.'</strong>');
+            self::abort(500, 'Error: '.$errstr.' - Error Code '.$errno.'<br/><br/>File: '.$errfile.' - Line <strong>'.$errline.'</strong>');
         });
         set_exception_handler(function($exception) {
-            $this->abort(500, $exception->getMessage());
+            self::abort(500, $exception->getMessage());
         });
         header("x-powered-by: CloudFirewall WAF");
+        self::requirements();
     }
 
     /**
@@ -53,11 +50,11 @@ class CloudFirewall {
      * @return mixed Bool False if request is not responded. JSON if request success.
      */
     public function changeSecurityLevel(string $value = 'low', string $zone = null) {
-        if($this->checkSecurityLevel($value)) {
+        if(self::checkSecurityLevel($value)) {
             if($zone) {
-                return $this->connect('https://api.cloudflare.com/client/v4/zones/'.$zone.'/settings/security_level', 'PATCH', array('value' => $value));
+                return self::connect('https://api.cloudflare.com/client/v4/zones/'.$zone.'/settings/security_level', 'PATCH', array('value' => $value));
             } else {
-                return $this->connect('https://api.cloudflare.com/client/v4/zones/'.$this->zone.'/settings/security_level', 'PATCH', array('value' => $value));
+                return self::connect('https://api.cloudflare.com/client/v4/zones/'.$this->zone.'/settings/security_level', 'PATCH', array('value' => $value));
             }
         } else {
             return false;
@@ -72,8 +69,8 @@ class CloudFirewall {
      * @return mixed Bool False if request is not responded. JSON if request success.
      */
     public function createAccessRule(string $value, string $action) {
-        if($this->checkIP($value) && $this->checkAccessRule($action)) {
-            return $this->connect('https://api.cloudflare.com/client/v4/user/firewall/access_rules/rules', 'POST', array('mode' => $action, 'configuration' => array('target' => ($this->checkIPv4($value) ? 'ip' : ($this->checkIPv4($value) ? 'ip6' : null)), 'value' => $value), 'notes' => 'Created by CloudFirewall'));
+        if(self::checkIP($value) && self::checkAccessRule($action)) {
+            return self::connect('https://api.cloudflare.com/client/v4/user/firewall/access_rules/rules', 'POST', array('mode' => $action, 'configuration' => array('target' => (self::checkIPv4($value) ? 'ip' : ($this->checkIPv4($value) ? 'ip6' : null)), 'value' => $value), 'notes' => 'Created by CloudFirewall'));
         } else {
             return false;
         }
@@ -88,32 +85,32 @@ class CloudFirewall {
     public function sqlInjectionBlock(bool $ban = true) {
         foreach ($_GET as $key => $value) {
 			if (is_array($value)) {
-				$flattened = $this->arrayFlatten($value);
+				$flattened = self::arrayFlatten($value);
 				foreach ($flattened as $sub_key => $sub_value) {
-					$this->sqlCheck($sub_value, "_GET", $sub_key, $ban);
+					self::sqlCheck($sub_value, "_GET", $sub_key, $ban);
 				}
 			} else {
-				$this->sqlCheck($value, "_GET", $key, $ban);
+				self::sqlCheck($value, "_GET", $key, $ban);
 			}
         }
         foreach ($_POST as $key => $value) {
 			if (is_array($value)) {
-				$flattened = $this->arrayFlatten($value);
+				$flattened = self::arrayFlatten($value);
 				foreach ($flattened as $sub_key => $sub_value) {
-					$this->sqlCheck($sub_value, "_POST", $sub_key, $ban);
+					self::sqlCheck($sub_value, "_POST", $sub_key, $ban);
 				}
 			} else {
-				$this->sqlCheck($value, "_POST", $key, $ban);
+				self::sqlCheck($value, "_POST", $key, $ban);
 			}
         }
         foreach ($_COOKIE as $key => $value) {
 			if (is_array($value)) {
-				$flattened = $this->arrayFlatten($value);
+				$flattened = self::arrayFlatten($value);
 				foreach ($flattened as $sub_key => $sub_value) {
-					$this->sqlCheck($sub_value, "_COOKIE", $sub_key, $ban);
+					self::sqlCheck($sub_value, "_COOKIE", $sub_key, $ban);
 				}
 			} else {
-				$this->sqlCheck($value, "_COOKIE", $key, $ban);
+				self::sqlCheck($value, "_COOKIE", $key, $ban);
 			}
 		}
     }
@@ -127,37 +124,37 @@ class CloudFirewall {
     public function xssInjectionBlock(bool $ban = true) {
         foreach ($_GET as $key => $value) {
 			if (is_array($value)) {
-				$flattened = $this->arrayFlatten($value);
+				$flattened = self::arrayFlatten($value);
 				foreach ($flattened as $sub_key => $sub_value) {
-                    $this->xssCheck($sub_value, "GET", $sub_key, $ban);
+                    self::xssCheck($sub_value, "GET", $sub_key, $ban);
                     $this->htmlCheck($sub_value, "GET", $sub_key, $ban);
 				}
 			} else {
-                $this->xssCheck($value, "GET", $key, $ban);
+                self::xssCheck($value, "GET", $key, $ban);
                 $this->htmlCheck($value, "GET", $key, $ban);
 			}
         }
         foreach ($_POST as $key => $value) {
 			if (is_array($value)) {
-				$flattened = $this->arrayFlatten($value);
+				$flattened = self::arrayFlatten($value);
 				foreach ($flattened as $sub_key => $sub_value) {
-                    $this->xssCheck($sub_value, "POST", $sub_key, $ban);
+                    self::xssCheck($sub_value, "POST", $sub_key, $ban);
                     $this->htmlCheck($sub_value, "POST", $sub_key, $ban);
 				}
 			} else {
-                $this->xssCheck($value, "POST", $key, $ban);
+                self::xssCheck($value, "POST", $key, $ban);
                 $this->htmlCheck($value, "POST", $key, $ban);
 			}
         }
         foreach ($_COOKIE as $key => $value) {
 			if (is_array($value)) {
-				$flattened = $this->arrayFlatten($value);
+				$flattened = self::arrayFlatten($value);
 				foreach ($flattened as $sub_key => $sub_value) {
-                    $this->xssCheck($sub_value, "COOKIE", $sub_key, $ban);
+                    self::xssCheck($sub_value, "COOKIE", $sub_key, $ban);
                     $this->htmlCheck($sub_value, "COOKIE", $sub_key, $ban);
 				}
 			} else {
-                $this->xssCheck($value, "COOKIE", $key, $ban);
+                self::xssCheck($value, "COOKIE", $key, $ban);
                 $this->htmlCheck($value, "COOKIE", $key, $ban);
 			}
 		}
@@ -172,14 +169,14 @@ class CloudFirewall {
     public function cookieStealBlock(bool $ban = false) {
 		if (isset($_SESSION)) {
             if (!isset($_SESSION['CloudFirewall-Client-IP'])) {
-                $_SESSION['CloudFirewall-Client-IP'] = $this->getIP();
+                $_SESSION['CloudFirewall-Client-IP'] = self::getIP();
             } else {
-                if ($_SESSION['CloudFirewall-Client-IP'] != $this->getIP()) {
+                if ($_SESSION['CloudFirewall-Client-IP'] != self::getIP()) {
                     if($ban) {
-                        $this->createAccessRule($this->getIP(), 'block');
+                        $this->createAccessRule(self::getIP(), 'block');
                     }
                     session_destroy();
-                    $this->abort(403, 'Cookie Stealing Detected');
+                    self::abort(403, 'Cookie Stealing Detected');
                 }
             }
         }
@@ -199,9 +196,9 @@ class CloudFirewall {
                 }
                 if($_SESSION['CloudFirewall-Client-BadRequest'] >= $badRequestChance) {
                     if($ban) {
-                        $this->createAccessRule($this->getIP(), 'block');
+                        $this->createAccessRule(self::getIP(), 'block');
                     }
-                    $this->abort(403, 'Flood Detected');
+                    self::abort(403, 'Flood Detected');
                 }
                 if($_SESSION['CloudFirewall-Client-LastRequestTime'] >= time()) {
                     $_SESSION['CloudFirewall-Client-LastBadRequestTime'] = time()+$requestPerSecond;
@@ -217,7 +214,7 @@ class CloudFirewall {
      *
      * @return none.
      */
-    public function debug(bool $debug = false) {
+    public static function debug(bool $debug = false) {
         $this->debug = $debug;
     }
 
@@ -230,8 +227,8 @@ class CloudFirewall {
         return $this->benchmarkEnd($this->benchmarkStart);
     }
 
-    private function abort(int $status, string $message = null) {
-        $statusses = ['404', '403', '500'];
+    private static function abort(int $status, string $message = null) {
+        $statusses = ['404', '403', '500', '777'];
         if(in_array($status, $statusses)) {
             header('HTTP/1.0 '.$status.' Forbidden');
             die('<!DOCTYPE html><html lang="en"><head> <meta charset="UTF-8"> <meta name="viewport" content="width=device-width, initial-scale=1.0"> <title>'.$status.'</title> <style type="text/css">*{transition: all .6s}html{height: 100%}body{font-family: Lato, sans-serif; color: #888; margin: 0}#main{display: table; width: 100%; height: 100vh; text-align: center}.fof{display: table-cell; vertical-align: middle}h1{font-size: 50px; display: inline-block; padding-right: 12px; animation: type .5s alternate infinite}h3{font-size: 30px; padding-right: 12px; animation: type .5s alternate infinite}@keyframes type{from{box-shadow: inset -3px 0 0 #888}to{box-shadow: inset -3px 0 0 transparent}}</style></head><body><div id="main"> <div class="fof"> <h1>'.$status.'</h1>'.($message ? '<h3>'.$message.'</h3>' : '').' </div></div></body></html>');
@@ -240,56 +237,56 @@ class CloudFirewall {
         }
     }
 
-    private function xssCheck(string $value, string $method, string $displayName, bool $ban) {
+    private static function xssCheck(string $value, string $method, string $displayName, bool $ban) {
 		$replace = array("<3" => ":heart:");
 		foreach ($replace as $key => $value_rep) {
 			$value = str_replace($key, $value_rep, $value);
 		}
-		$badWords = $this->getVulnTypeData('XSS');
+		$badWords = self::getVulnTypeData('XSS');
 		foreach ($badWords as $badWord) {
 			if (strpos(strtolower($value), strtolower($badWord)) !== false) {
                 if($ban) {
-                    $this->createAccessRule($this->getIP(), 'block');
+                    $this->createAccessRule(self::getIP(), 'block');
                 }
-                $this->abort(403, 'XSS Injection Detected');
+                self::abort(403, 'XSS Injection Detected');
 			}
 		}
 	}
 
-    private function sqlCheck(string $value, string $method, string $displayName, bool $ban) {
+    private static function sqlCheck(string $value, string $method, string $displayName, bool $ban) {
 		$replace = array("can't" => "can not", "don't" => "do not");
 		foreach ($replace as $key => $value_rep) {
 			$value = str_replace($key, $value_rep, $value);
 		}
-		$badWords = $this->getVulnTypeData('SQL');
+		$badWords = self::getVulnTypeData('SQL');
 		foreach ($badWords as $badWord) {
 			if (strpos(strtolower($value), strtolower($badWord)) !== false) {
                 if($ban) {
-                    $this->createAccessRule($this->getIP(), 'block');
+                    $this->createAccessRule(self::getIP(), 'block');
                 }
-                $this->abort(403, 'SQL Injection Detected');
+                self::abort(403, 'SQL Injection Detected');
             }
 		}
     }
 
     private function htmlCheck(string $value, string $method, string $displayName, bool $ban) {
-		if ($this->is_html(strtolower($value)) !== false) {
+		if (self::is_html(strtolower($value)) !== false) {
             if($ban) {
-                $this->createAccessRule($this->getIP(), 'block');
+                $this->createAccessRule(self::getIP(), 'block');
             }
-            $this->abort(403, 'XSS Injection Detected');
+            self::abort(403, 'XSS Injection Detected');
 		}
     }
     
-    protected function is_html(string $string) {
+    protected static function is_html(string $string) {
 		return ($string != strip_tags($string) ? true : false);
 	}
 
-    protected function getIP() {
+    protected static function getIP() {
         return ($_SERVER['HTTP_CF_CONNECTING_IP'] ? $_SERVER['HTTP_CF_CONNECTING_IP'] : $_SERVER['REMOTE_ADDR']);
     }
 
-    private function arrayFlatten(array $array) {
+    private static function arrayFlatten(array $array) {
 	    $flatten = array();
 	    array_walk_recursive($array, function($value) use(&$flatten) {
 	        $flatten[] = $value;
@@ -297,7 +294,7 @@ class CloudFirewall {
 	    return $flatten;
 	}
 
-    protected function getVulnTypeData(string $type) {
+    protected static function getVulnTypeData(string $type) {
         if($type && in_array($type, array('SQL', 'XSS'))) {
             $vuln['SQL'] = array(
                 "'",
@@ -371,7 +368,7 @@ class CloudFirewall {
         }
     }
 
-    protected function connect(string $url, string $request, array $fields) {
+    protected static function connect(string $url, string $request, array $fields) {
         $this->curl = curl_init();
         curl_setopt($this->curl, CURLOPT_URL, $url);
         curl_setopt($this->curl, CURLOPT_RETURNTRANSFER, 1);
@@ -387,26 +384,26 @@ class CloudFirewall {
         return curl_exec($this->curl);
     }
 
-    protected function checkSecurityLevel(string $value) {
+    protected static function checkSecurityLevel(string $value) {
         return (in_array($value, array('essentially_off', 'low', 'medium', 'high', 'under_attack'))) ? true : false;
     }
-    protected function checkAccessRule(string $value) {
+    protected static function checkAccessRule(string $value) {
         return (in_array($value, array('block', 'challenge', 'whitelist', 'js_challenge'))) ? true : false;
     }
 
-    protected function checkIPv4(string $value) {
+    protected static function checkIPv4(string $value) {
         return (filter_var($value, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)) ? true : false;
     }
 
-    protected function checkIPv6(string $value) {
+    protected static function checkIPv6(string $value) {
         return (filter_var($value, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6)) ? true : false;
     }
 
-    protected function checkIP(string $value) {
+    protected static function checkIP(string $value) {
         return (filter_var($value, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4) || filter_var($value, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6)) ? true : false;
     }
 
-    private function benchmarkStart() {
+    private static function benchmarkStart() {
         $r = explode(' ', microtime());
         $r = $r[1] + $r[0];
         return $r;
@@ -417,6 +414,18 @@ class CloudFirewall {
         $r = $r[1] + $r[0];
         $r = round($r - $startTime, 4);
         return $r;
+    }
+
+    protected static function requirements() {
+        if(version_compare('7.1', PHP_VERSION) > 0) {
+            self::abort(777, 'Please use PHP version >= 7.1');
+        }
+        if(!extension_loaded('curl')) {
+            self::abort(777, 'Unable to find cURL extension');
+        }
+        if(!extension_loaded('openssl')) {
+            self::abort(777, 'Unable to find OpenSSL extension');
+        }
     }
 
 }
