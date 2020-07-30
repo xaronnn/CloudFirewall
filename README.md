@@ -80,4 +80,5 @@ $firewall->benchmark();
 # Requirements
 
 - [x]  PHP >= 7.1.*
-- [x]  Curl w/ SSL
+- [x]  cURL extension
+- [x]  OpenSSL extension
