@@ -198,6 +198,7 @@ class CloudFirewall {
                     if($ban) {
                         $this->createAccessRule($this->getIP(), 'block');
                     }
+                    $_SESSION['CloudFirewall-Client-LastBadRequestTime'] = time()+$requestPerSecond;
                     self::abort(403, 'Flood Detected');
                 }
                 if($_SESSION['CloudFirewall-Client-LastRequestTime'] >= time()) {
