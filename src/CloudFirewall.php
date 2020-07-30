@@ -87,30 +87,30 @@ class CloudFirewall {
 			if (is_array($value)) {
 				$flattened = self::arrayFlatten($value);
 				foreach ($flattened as $sub_key => $sub_value) {
-					self::sqlCheck($sub_value, "_GET", $sub_key, $ban);
+					$this->sqlCheck($sub_value, "_GET", $sub_key, $ban);
 				}
 			} else {
-				self::sqlCheck($value, "_GET", $key, $ban);
+				$this->sqlCheck($value, "_GET", $key, $ban);
 			}
         }
         foreach ($_POST as $key => $value) {
 			if (is_array($value)) {
 				$flattened = self::arrayFlatten($value);
 				foreach ($flattened as $sub_key => $sub_value) {
-					self::sqlCheck($sub_value, "_POST", $sub_key, $ban);
+					$this->sqlCheck($sub_value, "_POST", $sub_key, $ban);
 				}
 			} else {
-				self::sqlCheck($value, "_POST", $key, $ban);
+				$this->sqlCheck($value, "_POST", $key, $ban);
 			}
         }
         foreach ($_COOKIE as $key => $value) {
 			if (is_array($value)) {
 				$flattened = self::arrayFlatten($value);
 				foreach ($flattened as $sub_key => $sub_value) {
-					self::sqlCheck($sub_value, "_COOKIE", $sub_key, $ban);
+					$this->sqlCheck($sub_value, "_COOKIE", $sub_key, $ban);
 				}
 			} else {
-				self::sqlCheck($value, "_COOKIE", $key, $ban);
+				$this->sqlCheck($value, "_COOKIE", $key, $ban);
 			}
 		}
     }
@@ -126,11 +126,11 @@ class CloudFirewall {
 			if (is_array($value)) {
 				$flattened = self::arrayFlatten($value);
 				foreach ($flattened as $sub_key => $sub_value) {
-                    self::xssCheck($sub_value, "GET", $sub_key, $ban);
+                    $this->xssCheck($sub_value, "GET", $sub_key, $ban);
                     $this->htmlCheck($sub_value, "GET", $sub_key, $ban);
 				}
 			} else {
-                self::xssCheck($value, "GET", $key, $ban);
+                $this->xssCheck($value, "GET", $key, $ban);
                 $this->htmlCheck($value, "GET", $key, $ban);
 			}
         }
@@ -138,11 +138,11 @@ class CloudFirewall {
 			if (is_array($value)) {
 				$flattened = self::arrayFlatten($value);
 				foreach ($flattened as $sub_key => $sub_value) {
-                    self::xssCheck($sub_value, "POST", $sub_key, $ban);
+                    $this->xssCheck($sub_value, "POST", $sub_key, $ban);
                     $this->htmlCheck($sub_value, "POST", $sub_key, $ban);
 				}
 			} else {
-                self::xssCheck($value, "POST", $key, $ban);
+                $this->xssCheck($value, "POST", $key, $ban);
                 $this->htmlCheck($value, "POST", $key, $ban);
 			}
         }
@@ -150,11 +150,11 @@ class CloudFirewall {
 			if (is_array($value)) {
 				$flattened = self::arrayFlatten($value);
 				foreach ($flattened as $sub_key => $sub_value) {
-                    self::xssCheck($sub_value, "COOKIE", $sub_key, $ban);
+                    $this->xssCheck($sub_value, "COOKIE", $sub_key, $ban);
                     $this->htmlCheck($sub_value, "COOKIE", $sub_key, $ban);
 				}
 			} else {
-                self::xssCheck($value, "COOKIE", $key, $ban);
+                $this->xssCheck($value, "COOKIE", $key, $ban);
                 $this->htmlCheck($value, "COOKIE", $key, $ban);
 			}
 		}
@@ -237,7 +237,7 @@ class CloudFirewall {
         }
     }
 
-    private static function xssCheck(string $value, string $method, string $displayName, bool $ban) {
+    private function xssCheck(string $value, string $method, string $displayName, bool $ban) {
 		$replace = array("<3" => ":heart:");
 		foreach ($replace as $key => $value_rep) {
 			$value = str_replace($key, $value_rep, $value);
@@ -253,7 +253,7 @@ class CloudFirewall {
 		}
 	}
 
-    private static function sqlCheck(string $value, string $method, string $displayName, bool $ban) {
+    private function sqlCheck(string $value, string $method, string $displayName, bool $ban) {
 		$replace = array("can't" => "can not", "don't" => "do not");
 		foreach ($replace as $key => $value_rep) {
 			$value = str_replace($key, $value_rep, $value);
