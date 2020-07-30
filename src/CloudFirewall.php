@@ -214,7 +214,7 @@ class CloudFirewall {
      *
      * @return none.
      */
-    public static function debug(bool $debug = false) {
+    public function debug(bool $debug = false) {
         $this->debug = $debug;
     }
 
