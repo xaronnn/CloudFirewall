@@ -27,10 +27,10 @@ class CloudFirewall {
         $this->zone = $zone;
         $this->benchmarkStart = self::benchmarkStart();
         if(isset($_SESSION)) {
-            $_SESSION['CloudFirewall-Client-IP'] = self::getIP();
+            $_SESSION['CloudFirewall-Client-IP'] = $this->getIP();
         } else {
             session_start();
-            $_SESSION['CloudFirewall-Client-IP'] = self::getIP();
+            $_SESSION['CloudFirewall-Client-IP'] = $this->getIP();
         }
         set_error_handler(function($errno, $errstr, $errfile, $errline) {
             self::abort(500, 'Error: '.$errstr.' - Error Code '.$errno.'<br/><br/>File: '.$errfile.' - Line <strong>'.$errline.'</strong>');
@@ -169,11 +169,11 @@ class CloudFirewall {
     public function cookieStealBlock(bool $ban = false) {
 		if (isset($_SESSION)) {
             if (!isset($_SESSION['CloudFirewall-Client-IP'])) {
-                $_SESSION['CloudFirewall-Client-IP'] = self::getIP();
+                $_SESSION['CloudFirewall-Client-IP'] = $this->getIP();
             } else {
-                if ($_SESSION['CloudFirewall-Client-IP'] != self::getIP()) {
+                if ($_SESSION['CloudFirewall-Client-IP'] != $this->getIP()) {
                     if($ban) {
-                        $this->createAccessRule(self::getIP(), 'block');
+                        $this->createAccessRule($this->getIP(), 'block');
                     }
                     session_destroy();
                     self::abort(403, 'Cookie Stealing Detected');
@@ -196,7 +196,7 @@ class CloudFirewall {
                 }
                 if($_SESSION['CloudFirewall-Client-BadRequest'] >= $badRequestChance) {
                     if($ban) {
-                        $this->createAccessRule(self::getIP(), 'block');
+                        $this->createAccessRule($this->getIP(), 'block');
                     }
                     self::abort(403, 'Flood Detected');
                 }
@@ -246,7 +246,7 @@ class CloudFirewall {
 		foreach ($badWords as $badWord) {
 			if (strpos(strtolower($value), strtolower($badWord)) !== false) {
                 if($ban) {
-                    $this->createAccessRule(self::getIP(), 'block');
+                    $this->createAccessRule($this->getIP(), 'block');
                 }
                 self::abort(403, 'XSS Injection Detected');
 			}
@@ -262,7 +262,7 @@ class CloudFirewall {
 		foreach ($badWords as $badWord) {
 			if (strpos(strtolower($value), strtolower($badWord)) !== false) {
                 if($ban) {
-                    $this->createAccessRule(self::getIP(), 'block');
+                    $this->createAccessRule($this->getIP(), 'block');
                 }
                 self::abort(403, 'SQL Injection Detected');
             }
@@ -272,7 +272,7 @@ class CloudFirewall {
     private function htmlCheck(string $value, string $method, string $displayName, bool $ban) {
 		if (self::is_html(strtolower($value)) !== false) {
             if($ban) {
-                $this->createAccessRule(self::getIP(), 'block');
+                $this->createAccessRule($this->getIP(), 'block');
             }
             self::abort(403, 'XSS Injection Detected');
 		}
@@ -282,7 +282,7 @@ class CloudFirewall {
 		return ($string != strip_tags($string) ? true : false);
 	}
 
-    protected static function getIP() {
+    protected function getIP() {
         return ($_SERVER['HTTP_CF_CONNECTING_IP'] ? $_SERVER['HTTP_CF_CONNECTING_IP'] : $_SERVER['REMOTE_ADDR']);
     }
 
