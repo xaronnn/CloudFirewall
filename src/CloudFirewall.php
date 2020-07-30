@@ -152,10 +152,10 @@ class CloudFirewall {
     /**
      * Enabling block steal cookie attacks.
      *
-     * @param bool $ban Default is true and it will ban from Cloudflare.
+     * @param bool $ban Default is false and it will ban from Cloudflare.
      * @return none.
      */
-    public function cookieStealBlock(bool $ban = true) {
+    public function cookieStealBlock(bool $ban = false) {
 		if (isset($_SESSION)) {
             if (!isset($_SESSION['CloudFirewall-Client-IP'])) {
                 $_SESSION['CloudFirewall-Client-IP'] = $this->getIP();

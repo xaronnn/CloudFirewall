@@ -53,7 +53,7 @@ $firewall->xssInjectionBlock();
 
 /*
 Enabling block cookie steal attacks.
-Parameters: cookieStealBlock(true if you want request ip ban from Cloudflare. default is true.)
+Parameters: cookieStealBlock(true if you want request ip ban from Cloudflare. default is false.)
 */
 $firewall->cookieStealBlock();
 
