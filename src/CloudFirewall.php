@@ -52,9 +52,9 @@ class CloudFirewall {
     public function changeSecurityLevel(string $value = 'low', string $zone = null) {
         if(self::checkSecurityLevel($value)) {
             if($zone) {
-                return self::connect('https://api.cloudflare.com/client/v4/zones/'.$zone.'/settings/security_level', 'PATCH', array('value' => $value));
+                return $this->connect('https://api.cloudflare.com/client/v4/zones/'.$zone.'/settings/security_level', 'PATCH', array('value' => $value));
             } else {
-                return self::connect('https://api.cloudflare.com/client/v4/zones/'.$this->zone.'/settings/security_level', 'PATCH', array('value' => $value));
+                return $this->connect('https://api.cloudflare.com/client/v4/zones/'.$this->zone.'/settings/security_level', 'PATCH', array('value' => $value));
             }
         } else {
             return false;
@@ -70,7 +70,7 @@ class CloudFirewall {
      */
     public function createAccessRule(string $value, string $action) {
         if(self::checkIP($value) && self::checkAccessRule($action)) {
-            return self::connect('https://api.cloudflare.com/client/v4/user/firewall/access_rules/rules', 'POST', array('mode' => $action, 'configuration' => array('target' => (self::checkIPv4($value) ? 'ip' : ($this->checkIPv4($value) ? 'ip6' : null)), 'value' => $value), 'notes' => 'Created by CloudFirewall'));
+            return $this->connect('https://api.cloudflare.com/client/v4/user/firewall/access_rules/rules', 'POST', array('mode' => $action, 'configuration' => array('target' => (self::checkIPv4($value) ? 'ip' : ($this->checkIPv4($value) ? 'ip6' : null)), 'value' => $value), 'notes' => 'Created by CloudFirewall'));
         } else {
             return false;
         }
@@ -224,7 +224,7 @@ class CloudFirewall {
      * @return float Script executed in X seconds.
      */
     public function benchmark() {
-        return $this->benchmarkEnd($this->benchmarkStart);
+        return self::benchmarkEnd($this->benchmarkStart);
     }
 
     private static function abort(int $status, string $message = null) {
@@ -368,7 +368,7 @@ class CloudFirewall {
         }
     }
 
-    protected static function connect(string $url, string $request, array $fields) {
+    protected function connect(string $url, string $request, array $fields) {
         $this->curl = curl_init();
         curl_setopt($this->curl, CURLOPT_URL, $url);
         curl_setopt($this->curl, CURLOPT_RETURNTRANSFER, 1);
@@ -409,7 +409,7 @@ class CloudFirewall {
         return $r;
     }
 
-    private function benchmarkEnd($startTime) {
+    private static function benchmarkEnd($startTime) {
         $r = explode(' ', microtime());
         $r = $r[1] + $r[0];
         $r = round($r - $startTime, 4);
