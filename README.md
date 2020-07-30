@@ -62,6 +62,13 @@ Enabling anti floood.
 Parameters: antiFlood(requestPerSecond, badRequestChance, badRequestResetInXseconds, banFromCloudflare)
 */
 $firewall->antiFlood(2, 3, 5, true);
+
+/*
+Get script execution time.
+Info: Please write at the bottom of the page.
+Usage: echo($firewall->benchmark());
+*/
+$firewall->benchmark();
 ```
 
 # Requirements

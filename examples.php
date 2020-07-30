@@ -35,7 +35,7 @@ $firewall->xssInjectionBlock();
 
 /*
 Enabling block cookie steal attacks.
-Parameters: cookieStealBlock(true if you want request ip ban from Cloudflare. default is false.)
+Parameters: cookieStealBlock(true if you want request ip ban from Cloudflare. default is true.)
 */
 $firewall->cookieStealBlock();
 
@@ -44,4 +44,11 @@ Enabling anti floood.
 Parameters: antiFlood(requestPerSecond, badRequestChance, badRequestResetInXseconds, banFromCloudflare)
 */
 $firewall->antiFlood(2, 3, 5, true);
+
+/*
+Get script execution time.
+Info: Please write at the bottom of the page.
+Usage: echo($firewall->benchmark());
+*/
+$firewall->benchmark();
 ?>

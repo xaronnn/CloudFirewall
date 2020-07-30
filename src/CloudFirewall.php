@@ -1,6 +1,14 @@
 <?php
 
+/**
+ *  CloudFirewall - Protect your website against bots/spam/flood, sql/xss injection attacks as using Cloudflare service.
+ *
+ *  @author Uğur PEKESEN <me@xaron.us>
+ *  @version 0.1
+ */
+
 namespace CF;
+
 class CloudFirewall {
 
     private $email;
@@ -8,6 +16,7 @@ class CloudFirewall {
     private $zone;
     private $curl;
     private $debug;
+    protected $version = '0.1.4.3';
 
     /**
      * CloudFirewall constructor.
@@ -20,15 +29,20 @@ class CloudFirewall {
         $this->email = $email;
         $this->key = $key;
         $this->zone = $zone;
+        $this->benchmarkStart = $this->benchmarkStart();
         if(isset($_SESSION)) {
             $_SESSION['CloudFirewall-Client-IP'] = $this->getIP();
+        } else {
+            session_start();
+            $_SESSION['CloudFirewall-Client-IP'] = $this->getIP();
         }
-        set_error_handler(function($errno, $errstr, $errfile, $errline ) {
-            throw new ErrorException($errstr, $errno, 0, $errfile, $errline);
+        set_error_handler(function($errno, $errstr, $errfile, $errline) {
+            $this->abort(500, 'Error: '.$errstr.' - Error Code '.$errno.'<br/><br/>File: '.$errfile.' - Line <strong>'.$errline.'</strong>');
         });
         set_exception_handler(function($exception) {
             $this->abort(500, $exception->getMessage());
         });
+        header("x-powered-by: CloudFirewall WAF");
     }
 
     /**
@@ -207,6 +221,15 @@ class CloudFirewall {
         $this->debug = $debug;
     }
 
+    /**
+     * Get script execution time in seconds.
+     *
+     * @return float Script executed in X seconds.
+     */
+    public function benchmark() {
+        return $this->benchmarkEnd($this->benchmarkStart);
+    }
+
     private function abort(int $status, string $message = null) {
         $statusses = ['404', '403', '500'];
         if(in_array($status, $statusses)) {
@@ -381,6 +404,19 @@ class CloudFirewall {
 
     protected function checkIP(string $value) {
         return (filter_var($value, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4) || filter_var($value, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6)) ? true : false;
+    }
+
+    private function benchmarkStart() {
+        $r = explode(' ', microtime());
+        $r = $r[1] + $r[0];
+        return $r;
+    }
+
+    private function benchmarkEnd($startTime) {
+        $r = explode(' ', microtime());
+        $r = $r[1] + $r[0];
+        $r = round($r - $startTime, 4);
+        return $r;
     }
 
 }
