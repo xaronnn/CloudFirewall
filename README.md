@@ -64,7 +64,7 @@ Parameters: cookieStealBlock(true if you want request ip ban from Cloudflare. de
 $firewall->cookieStealBlock();
 
 /*
-Enabling anti floood.
+Enabling anti flood.
 Parameters: antiFlood(requestPerSecond, badRequestChance, badRequestResetInXseconds, banFromCloudflare)
 */
 $firewall->antiFlood(1, 3, 5, true);
