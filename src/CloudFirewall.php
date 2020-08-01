@@ -4,7 +4,7 @@
  *  CloudFirewall - Protect your website against bots/spam/flood, sql/xss injection attacks as using Cloudflare service.
  *
  *  @author Uğur PEKESEN <me@xaron.us>
- *  @version 0.1
+ *  @version 0.1.4.6
  */
 
 namespace CF;
@@ -12,7 +12,7 @@ namespace CF;
 class CloudFirewall {
 
     private $email, $key, $zone, $curl, $debug;
-    protected $version = '0.1.4.4';
+    protected $version = '0.1.4.6';
 
     /**
      * CloudFirewall constructor.
@@ -39,6 +39,7 @@ class CloudFirewall {
             self::abort(500, $exception->getMessage());
         });
         header("x-powered-by: CloudFirewall WAF");
+        header("x-cloudfirewall: v".$this->version);
         self::requirements();
     }
 
@@ -345,7 +346,7 @@ class CloudFirewall {
                 '<font',
                 '<br',
                 '</br',
-                '<a ',
+                '<a',
                 'href',
                 '<h',
                 '<image',
