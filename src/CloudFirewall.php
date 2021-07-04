@@ -3,8 +3,8 @@
 /**
  *  CloudFirewall - Protect your website against bots/spam/flood, sql/xss injection attacks as using Cloudflare service.
  *
- *  @author Uğur PEKESEN <me@xaron.us>
- *  @version 0.1.4.6
+ *  @author Uğur PEKESEN <xaron.job@gmail.com>
+ *  @version 1.0.2
  */
 
 namespace CF;
@@ -12,7 +12,7 @@ namespace CF;
 class CloudFirewall {
 
     private $email, $key, $zone, $curl, $debug;
-    protected $version = '0.1.4.6';
+    protected $version = '1.0.2';
 
     /**
      * CloudFirewall constructor.
@@ -285,7 +285,7 @@ class CloudFirewall {
 	}
 
     protected function getIP() {
-        return ($_SERVER['HTTP_CF_CONNECTING_IP'] ? $_SERVER['HTTP_CF_CONNECTING_IP'] : $_SERVER['REMOTE_ADDR']);
+        return (isset($_SERVER['HTTP_CF_CONNECTING_IP']) ? $_SERVER['HTTP_CF_CONNECTING_IP'] : $_SERVER['REMOTE_ADDR']);
     }
 
     private static function arrayFlatten(array $array) {
