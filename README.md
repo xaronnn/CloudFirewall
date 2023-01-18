@@ -1,13 +1,12 @@
 # CloudFirewall
 Protect your website against bots/spam/flood, sql/xss injection attacks as using Cloudflare service.
 
-![GitHub stars](https://img.shields.io/github/stars/xaronnn/CloudFirewall)
-![GitHub code size in bytes](https://img.shields.io/github/languages/code-size/xaronnn/CloudFirewall)
-![GitHub](https://img.shields.io/github/license/xaronnn/CloudFirewall)
-![Discord](https://img.shields.io/discord/729977481242738690)
-![GitHub top language](https://img.shields.io/github/languages/top/xaronnn/CloudFirewall)
-![CodeFactor Grade](https://img.shields.io/codefactor/grade/github/xaronnn/CloudFirewall)
-![GitHub issues](https://img.shields.io/github/issues/xaronnn/CloudFirewall)
+![GitHub stars](https://img.shields.io/github/stars/0x5841524f4e/CloudFirewall)
+![GitHub code size in bytes](https://img.shields.io/github/languages/code-size/0x5841524f4e0x5841524f4e/CloudFirewall)
+![GitHub](https://img.shields.io/github/license/0x5841524f4e/CloudFirewall)
+![GitHub top language](https://img.shields.io/github/languages/top/0x5841524f4e/CloudFirewall)
+![CodeFactor Grade](https://img.shields.io/codefactor/grade/github/0x5841524f4e/CloudFirewall)
+![GitHub issues](https://img.shields.io/github/issues/0x5841524f4e/CloudFirewall)
 
 
 # Installation
@@ -16,7 +15,7 @@ Protect your website against bots/spam/flood, sql/xss injection attacks as using
 
 # WHMCS Module
 
-`Download: https://github.com/xaronnn/CloudFirewall/raw/master/CloudFirewallWHMCS.rar`
+`Download: https://github.com/0x5841524f4e/CloudFirewall/raw/master/CloudFirewallWHMCS.rar`
 
 `Export files to your main WHMCS directory.`
 
