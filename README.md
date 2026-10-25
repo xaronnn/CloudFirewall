@@ -1,5 +1,5 @@
 # CloudFirewall
-Protect your website against bots/spam/flood, sql/xss injection attacks as using Cloudflare service.
+Protect your website against bots/spam/flood, sql/xss injection attacks as using Cloudflare service. 
 
 ![GitHub stars](https://img.shields.io/github/stars/0x5841524f4e/CloudFirewall)
 ![GitHub code size in bytes](https://img.shields.io/github/languages/code-size/0x5841524f4e0x5841524f4e/CloudFirewall)
